@@ -5,13 +5,14 @@ const userRoutes = require("./api/users/users.routes");
 const notFoundHandler = require("./middlewares/notFoundHandler");
 const errorHandler = require("./middlewares/errorHandler");
 const passport = require("passport");
-const { localStrategy } = require("./middlewares/passport");
+const { localStrategy, JwtStrategy } = require("./middlewares/passport");
 const app = express();
 connectDb();
 
 app.use(express.json());
 app.use(passport.initialize());
 passport.use("local", localStrategy);
+passport.use("JWT", JwtStrategy)
 
 app.use("/urls", urlRoutes);
 app.use(userRoutes);

@@ -10,7 +10,7 @@ exports.shorten = async (req, res) => {
   try {
     req.body.shortUrl = `${baseUrl}/${urlCode}`;
     req.body.urlCode = urlCode;
-    req.body.userId = req.params.userId;
+    req.body.userId = req.user;
     const newUrl = await Url.create(req.body);
     await User.findByIdAndUpdate(req.params.userId, {
       $push: { urls: newUrl._id },
@@ -34,14 +34,16 @@ exports.redirect = async (req, res) => {
   }
 };
 
-exports.deleteUrl = async (req, res) => {
+exports.deleteUrl = async (req, res,next) => {
   try {
-    const url = await Url.findOne({ urlCode: req.params.code });
-    if (url) {
-      await Url.findByIdAndDelete(url._id);
+    const url = await Url.findById(req.params.code);
+    if (url.userId.equals(req.user._id)) {
+      await Url.deleteOne(url._id);
       return res.status(201).json("Deleted");
-    } else {
+    } else if(!url){
       return res.status(404).json("No URL Found");
+    }else{
+      return res.status(404).json({message: "Unauthorized user"});
     }
   } catch (err) {
     next(err);
